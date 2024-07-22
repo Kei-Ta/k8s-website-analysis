@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Kei-Ta/k8s-website-untranslated-finder/internal/app"
+	"github.com/Kei-Ta/k8s-website-analysis/internal/app"
 )
 
 func main() {
