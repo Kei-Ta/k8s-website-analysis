@@ -20,13 +20,15 @@ jobs:
 
     - name: Install dependencies
       run: go mod download
+    - name: Run Init Command
+      run: go run cmd/k18s/main.go init
 
     - name: Run Diff Command
       run: go run cmd/k18s/main.go diff  -l ja
 
     - name: Update README.md with diff result
       run: |
-        diff_result=$(cat output/summary_language.md)
+        diff_result=$(cat output/summary_ja.md)
         # Insert the diff result between the markers
         awk -v diff="$diff_result" '
         BEGIN {p=1}
