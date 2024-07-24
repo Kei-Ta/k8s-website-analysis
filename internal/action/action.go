@@ -1,67 +1,53 @@
 package action
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/Kei-Ta/k8s-website-analysis/internal/utils"
 	"github.com/Kei-Ta/k8s-website-analysis/pkg/git"
 )
 
-const repoURL = "https://github.com/kubernetes/website.git"
-
 func Init() {
 	if utils.FolderExists() {
-		fmt.Printf("websiteフォルダは既に存在します。\n")
-		fmt.Println("Pullしますか？ (yes/no)")
-		err := git.GitPull()
-		if err != nil {
-			fmt.Printf("Pullエラー: %v\n", err)
-		} else {
-			fmt.Println("Pullが完了しました。")
-		}
+		fmt.Printf("kubernetes/website project exist.\n")
+		fmt.Printf("If you update project, Please run the update command.\n")
 	} else {
-		fmt.Printf("websiteフォルダは存在しません。\n")
-		fmt.Println("Cloneしますか？ (yes/no)")
-		cmd := exec.Command("git", "clone", repoURL)
-		err := cmd.Run()
+		fmt.Printf("kubernetes/website project doesn't exist.\n")
+		fmt.Println("run git clone.")
+		err := git.GitClone()
 		if err != nil {
 			log.Fatalf("Git clone failed: %s", err)
+		} else {
+			fmt.Printf("Success init command.\n")
 		}
 	}
 }
 
 func Update() {
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
+	if !utils.FolderExists() {
+		fmt.Printf("kubernetes/website project doesn't exist.\n")
+		fmt.Printf("Please run the init command.\n")
+		return
+	}
+	err := git.GitPull()
 	if err != nil {
-		fmt.Println("入力エラー:", err)
+		log.Fatalf("Git pull failed: %s", err)
+	} else {
+		fmt.Printf("Success update command.\n")
 	}
-	input = strings.TrimSpace(strings.ToLower(input))
-	switch input {
-	case "yes", "y":
-		fmt.Println("Pullを実行します。")
-		err := git.GitPull()
-		if err != nil {
-			fmt.Printf("Pullエラー: %v\n", err)
-		} else {
-			fmt.Println("Pullが完了しました。")
-		}
-	case "no", "n":
-		fmt.Println("操作をキャンセルしました。")
-	default:
-		fmt.Println("無効な入力です。操作をキャンセルしました。")
-	}
+
 }
 
 // RunK8sWebsiteDiff は指定されたフォルダ内の .md ファイルを比較し、タグ付けを行う関数です。
 func Diff(language string, directory string, tag string) {
-
+	if !utils.FolderExists() {
+		fmt.Printf("kubernetes/website project doesn't exist.\n")
+		fmt.Printf("Please run the init command.\n")
+		return
+	}
 	contentPath := "website/content"
 	// ja フォルダと en フォルダのパスを設定します
 	enPath := filepath.Join(contentPath, "en")
@@ -79,9 +65,36 @@ func Diff(language string, directory string, tag string) {
 	}
 	enFileCount := len(enFiles)
 
+	// 出力ディレクトリのパス
+	outputDir := "output"
+
+	// ディレクトリが存在しない場合は作成
+	if _, err := os.Stat(outputDir); os.IsNotExist(err) {
+		err := os.Mkdir(outputDir, os.ModePerm)
+		if err != nil {
+			log.Fatalf("Failed to create directory: %v", err)
+		}
+	}
+
+	// 出力ファイルを作成します
+	outputFile, err := os.Create(outputDir + "/diff_" + language + ".txt")
+	if err != nil {
+		log.Fatalf("Failed to create output file: %v", err)
+	}
+	defer outputFile.Close()
+
 	// en フォルダにあって ja フォルダにない .md ファイルのタグ付けを行います
 
 	c := 0
+	// ファイルサイズごとにファイルを集計するためのマップ
+	sizeMap := map[string]int{
+		"XS": 0,
+		"S":  0,
+		"M":  0,
+		"L":  0,
+		"XL": 0,
+	}
+	// writer := tabwriter.NewWriter(outputFile, 0, 0, 1, ' ', tabwriter.AlignRight)
 
 	for i := 0; i < len(enFiles); i++ {
 		if !utils.Contains(selectLanPathFiles, enFiles[i]) {
@@ -90,12 +103,47 @@ func Diff(language string, directory string, tag string) {
 			if err != nil {
 				log.Fatalf("Failed to count words in file: %v", err)
 			}
-			if tag == "" || tag == size {
+			if tag == "" {
 				c++
-				fmt.Printf("%s,Count: %d,Size: %s\n", enFiles[i], count, size)
+				sizeMap[size]++
+				output := fmt.Sprintf("%s,Count: %d,Size: %s\n", enFiles[i], count, size)
+				fmt.Print(output)                       // コンソールに出力
+				_, err = outputFile.WriteString(output) // ファイルに出力
+				if err != nil {
+					log.Fatalf("Failed to write to output file: %v", err)
+				}
+			} else {
+				c++
+				output := fmt.Sprintf("%s,Count: %d,Size: %s\n", enFiles[i], count, size)
+				fmt.Print(output)                       // コンソールに出力
+				_, err = outputFile.WriteString(output) // ファイルに出力
+				if err != nil {
+					log.Fatalf("Failed to write to output file: %v", err)
+				}
 			}
 		}
 	}
+
+	// 出力ファイルを作成します
+	summaryFile, err := os.Create(outputDir + "/summary_" + language + ".md")
+	if err != nil {
+		log.Fatalf("Failed to create summary file: %v", err)
+	}
+	defer summaryFile.Close()
+
+	// Markdown形式の表のヘッダーをログとファイルに出力
+	header := "| XS | S | M | L | XL | Total |"
+	separator := "|:------:|:------:|:------:|:------:|:------:|:------:|"
+	fmt.Println(header)
+	// fmt.Println(separator)
+	fmt.Fprintln(summaryFile, header)
+	fmt.Fprintln(summaryFile, separator)
+
+	// サイズごとのカウントをログとファイルに出力
+	countLine := fmt.Sprintf("| %d | %d | %d | %d | %d | %d |", sizeMap["XS"], sizeMap["S"], sizeMap["M"], sizeMap["L"], sizeMap["XL"], c)
+	fmt.Println(countLine)
+	fmt.Fprintln(summaryFile, countLine)
+
 	fmt.Printf("no translate file count: %d\n", c)
 	fmt.Printf("enFile count: %d\n", enFileCount)
 }

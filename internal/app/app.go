@@ -19,12 +19,12 @@ type App struct {
 func NewApp() *App {
 	app := App{} //構造体作成
 	app.Cli = &cli.App{
-		Name:  "k8swebsite-diff",
+		Name:  "k18s",
 		Usage: "Check and manage folders",
 		Commands: []*cli.Command{
 			{
 				Name:  "init",
-				Usage: "clone kubernetes/website",
+				Usage: "Clone kubernetes/website project.",
 				Action: func(c *cli.Context) error {
 					action.Init()
 					return nil
@@ -32,7 +32,7 @@ func NewApp() *App {
 			},
 			{
 				Name:  "update",
-				Usage: "update kubernetes/website",
+				Usage: "Update kubernetes/website project.",
 				Action: func(c *cli.Context) error {
 					action.Update()
 					return nil
@@ -40,7 +40,7 @@ func NewApp() *App {
 			},
 			{
 				Name:  "diff",
-				Usage: "diff kubernetes/website",
+				Usage: "Output Non-Existent files in the selected language folder compared to english folder.",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:        "language",
@@ -52,13 +52,13 @@ func NewApp() *App {
 					&cli.StringFlag{
 						Name:        "directory",
 						Aliases:     []string{"d"},
-						Usage:       "Select directory(Optional)",
+						Usage:       "Select analysis directory(Optional)",
 						Destination: &app.Directory,
 					},
 					&cli.StringFlag{
 						Name:        "tag",
 						Aliases:     []string{"t"},
-						Usage:       "Select tag(Optional)",
+						Usage:       "Select file size tag(Optional)",
 						Destination: &app.Tag,
 					},
 				},
@@ -68,24 +68,24 @@ func NewApp() *App {
 					return nil
 				},
 			},
-			{
-				Name:  "coverage",
-				Usage: "coverage kubernetes/website",
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:        "language",
-						Aliases:     []string{"l"},
-						Usage:       "Select language",
-						Required:    true,
-						Destination: &app.Language,
-					},
-				},
-				Before: validateLanguage,
-				Action: func(c *cli.Context) error {
-					fmt.Printf("%s", app.Language)
-					return nil
-				},
-			},
+			// {
+			// 	Name:  "coverage",
+			// 	Usage: "coverage kubernetes/website",
+			// 	Flags: []cli.Flag{
+			// 		&cli.StringFlag{
+			// 			Name:        "language",
+			// 			Aliases:     []string{"l"},
+			// 			Usage:       "Select language",
+			// 			Required:    true,
+			// 			Destination: &app.Language,
+			// 		},
+			// 	},
+			// 	Before: validateLanguage,
+			// 	Action: func(c *cli.Context) error {
+			// 		fmt.Printf("%s", app.Language)
+			// 		return nil
+			// 	},
+			// },
 		},
 	}
 	return &app
