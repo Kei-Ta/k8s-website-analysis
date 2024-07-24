@@ -18,8 +18,10 @@ You can find out which files in a specific language have not been translated, an
 
 # Install
 - Git Clone and install
+```
 git clone https://github.com/Kei-Ta/k8s-website-analysis.git
 cd k8s-website-analysis
+```
 
 
 
