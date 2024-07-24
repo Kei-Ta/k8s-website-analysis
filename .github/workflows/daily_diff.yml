@@ -48,7 +48,6 @@ jobs:
         git commit -m "Update README.md with daily diff results"
 
     - name: Push changes
-      if: success() && steps.commit.outputs.changes == 'true'
       run: |
         git push
       env:
