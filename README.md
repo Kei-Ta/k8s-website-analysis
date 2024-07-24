@@ -1,5 +1,5 @@
 # k8s-website-analysis
-
+## Japanese Summary
 <!-- START DIFF RESULTS -->
 | XS | S | M | L | XL | Total |
 |:------:|:------:|:------:|:------:|:------:|:------:|
