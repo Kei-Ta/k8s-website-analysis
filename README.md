@@ -1,7 +1,9 @@
 # k8s-website-analysis
 ## Japanese Summary
 <!-- START DIFF RESULTS -->
-
+| XS | S | M | L | XL | Total |
+|:------:|:------:|:------:|:------:|:------:|:------:|
+| 16 | 429 | 349 | 628 | 115 | 1537 |
 <!-- END DIFF RESULTS -->
 
 # What is
