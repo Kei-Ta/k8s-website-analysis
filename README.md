@@ -8,7 +8,7 @@
 
 # What is
 This is CLI tool to analyze [kubernetes/website](https://github.com/kubernetes/website).
-You can find out which files in a specific language have not been translated, and what coverage of them has been translated.
+You can find out no translated files in a specific language.
 
 # Feature
 ## Output files that have not been translated
