@@ -1,0 +1,44 @@
+name: Daily Diff
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 毎日0時に実行
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '1.16'
+
+    - name: Install dependencies
+      run: go mod download
+
+    - name: Run Diff Command
+      run: go run cmd/k18s/main.go diff  -l ja
+
+    - name: Update README.md with diff result
+      run: |
+        diff_result=$(cat output/summary_language.md)
+        # Insert the diff result between the markers
+        awk -v diff="$diff_result" '
+        BEGIN {p=1}
+        /<!-- START DIFF RESULTS -->/ {print; print diff; p=0}
+        /<!-- END DIFF RESULTS -->/ {p=1}
+        p' README.md > README.tmp && mv README.tmp README.md
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add README.md
+        git commit -m "Update README.md with daily diff results"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
